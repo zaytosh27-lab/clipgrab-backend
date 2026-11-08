@@ -28,8 +28,11 @@ app.get("/api/download", (req, res) => {
   const q = req.query.quality === "720" ? "720" : "480";
   if (!url) return res.status(400).json({ error: "Not a TikTok link" });
 
-  execFile("yt-dlp", ["-J", "--no-playlist", "--", url], { timeout: 30_000, maxBuffer: 20e6 }, (err, out) => {
-    if (err) return res.status(502).json({ error: "Could not read that video" });
+  execFile("yt-dlp", ["-J", "--no-playlist", "--", url], { timeout: 30_000, maxBuffer: 20e6 }, (err, out, stderr) => {
+    if (err) {
+      console.error("YTDLP ERROR for", url, "::", (stderr || err.message || "").toString().slice(0, 800));
+      return res.status(502).json({ error: "Could not read that video" });
+    }
     try {
       const d = JSON.parse(out);
       const base = `${req.protocol}://${req.get("host")}`;
